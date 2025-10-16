@@ -1,0 +1,53 @@
+SELECT bc.customer_name
+FROM BankCustomer bc
+JOIN Depositer d ON bc.customer_name = d.customer_name
+JOIN BankAccount ba ON d.accno = ba.accno
+JOIN Branch br ON ba.branch_name = br.branch_name
+WHERE br.branch_city = 'Delhi'
+GROUP BY bc.customer_name
+HAVING COUNT(DISTINCT ba.branch_name) = (
+    SELECT COUNT(*) FROM Branch WHERE branch_city = 'Delhi'
+);
+
+SELECT DISTINCT lc.customer_name
+FROM (
+    SELECT d.customer_name, l.loan_number
+    FROM Depositer d
+    JOIN BankAccount ba ON d.accno = ba.accno
+    JOIN Loan l ON ba.branch_name = l.branch_name
+) AS lc
+RIGHT JOIN BankCustomer bc ON lc.customer_name = bc.customer_name
+WHERE bc.customer_name NOT IN (
+    SELECT customer_name FROM Depositer
+);
+SELECT DISTINCT l.customer_name
+FROM Loan l
+LEFT JOIN Depositer d ON l.customer_name = d.customer_name
+WHERE d.customer_name IS NULL;
+
+SELECT DISTINCT bc.customer_name
+FROM BankCustomer bc
+JOIN Depositer d ON bc.customer_name = d.customer_name
+JOIN BankAccount ba ON d.accno = ba.accno
+JOIN Loan l ON ba.branch_name = l.branch_name
+WHERE ba.branch_name LIKE 'SBI_%' AND
+      ba.branch_name IN (SELECT branch_name FROM Branch WHERE branch_city = 'Bangalore')
+GROUP BY bc.customer_name;
+
+SELECT branch_name
+FROM Branch
+WHERE assets > ALL (
+    SELECT assets
+    FROM Branch
+    WHERE branch_city = 'Bangalore'
+);
+
+DELETE FROM BankAccount
+WHERE branch_name IN (
+    SELECT branch_name
+    FROM Branch
+    WHERE branch_city = 'Bombay'
+);
+
+UPDATE BankAccount
+SET balance = balance * 1.05;
